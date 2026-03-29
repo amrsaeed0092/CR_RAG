@@ -17,3 +17,12 @@
 2026-03-29 17:24:32,323 - INFO - Received new analysis request
 2026-03-29 17:24:32,323 - INFO - Running RAG with Groq for: credit card
 2026-03-29 17:24:32,633 - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-29 18:29:46,342 - INFO - Received new analysis request
+2026-03-29 18:29:46,342 - INFO - Running RAG with Groq for: credit card
+2026-03-29 18:29:46,717 - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-29 18:30:25,390 - INFO - Received new analysis request
+2026-03-29 18:30:25,390 - INFO - Running RAG with Groq for: who is Amr Saeed?
+2026-03-29 18:30:25,781 - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-29 18:38:43,647 - INFO - Received new analysis request
+2026-03-29 18:38:43,647 - INFO - Running RAG with Groq for: who is Amr Saeed?
+2026-03-29 18:38:43,827 - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"

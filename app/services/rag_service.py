@@ -38,7 +38,7 @@ docs = splitter.split_documents(docs)
 # embeddings = OpenAIEmbeddings()  
 
 embeddings = HuggingFaceEmbeddings(
-    model_name="sentence-transformers/all-MiniLM-L6-v2"
+    model_name="sentence-transformers/all-mpnet-base-v2"
 )
 vectorstore = FAISS.from_documents(docs, embeddings)
 
@@ -46,7 +46,9 @@ retriever = vectorstore.as_retriever(search_kwargs={"k": 10})
 
 # Create Prompt
 template="""
-You are a remediation analyst.
+You are a remediation analyst. Based ON THE CONTEXT PROVIDED, find the most relevant past remediation.
+Format that specific past case into the following CSV structure.
+If no relevant case exists, return 'No match found'.
 
 New Issue:
 {question}
@@ -83,18 +85,17 @@ def run_rag(issue: str):
         return "\n\n".join(doc.page_content for doc in docs)
 
     rag_chain = (
-        # Use itemgetter or a lambda to ensure the string 'issue' 
-        # is passed correctly to the retriever
-        {"context": (lambda x: x["question"]) | retriever | format_docs, 
-         "question": lambda x: x["question"]}
+                    {"context": retriever | format_docs, "question": RunnablePassthrough()}
 
-        | prompt
-        | llm
-        | StrOutputParser()
-    )
+                    | prompt 
+                    | (lambda x: (print(f"PROMPT DEBUG:\n{x.to_string()}"), x)[1]) 
+                    | llm 
+                    | StrOutputParser()
+                )
+
     
     # Pass as a dictionary to match the Runnable mapping above
-    result = rag_chain.invoke({"question": issue})
+    result = rag_chain.invoke(issue)
     
     # Clean the output: Remove markdown code blocks if the LLM adds them
     clean_csv = re.sub(r'^```csv\s*|```\s*$', '', result.strip(), flags=re.MULTILINE)
