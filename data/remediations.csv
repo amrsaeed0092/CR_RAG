@@ -1,0 +1,4 @@
+shrp_id,issue_summary,root_cause,timeline,impacted_customers,resolution
+SHRP-1001,Incorrect PI allocation,System error,Jan-Feb 2023,1200,Refund issued
+SHRP-1002,Loan miscalculation,Data bug,Mar-Apr 2023,800,Balance corrected
+SHRP-1003,Interest miscalculation,Calculation bug,May-Jun 2023,600,Adjusted balances

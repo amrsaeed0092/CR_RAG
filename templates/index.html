@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Remediation Tool</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+
+<div class="container">
+    <h1>Remediation AI Tool</h1>
+
+    <form method="post" action="/run">
+        <textarea name="issue" placeholder="Describe new issue..." required></textarea>
+        <button type="submit">Run Analysis</button>
+    </form>
+
+    {% if table %}
+    <div class="table-container">
+        {{ table|safe }}
+    </div>
+
+    <a href="/download/{{ file_id }}">
+        <button class="download-btn">Download Excel</button>
+    </a>
+    {% endif %}
+
+    {% if message %}
+    <div class="message">{{ message }}</div>
+    {% endif %}
+</div>
+
+</body>
+</html>

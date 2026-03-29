@@ -1,0 +1,15 @@
+# Environments
+.crrag/
+env/
+crrag/
+ENV/
+
+# API Keys and Secrets
+.env
+
+# Local Vector Database / Cache
+faiss_store/
+__pycache__/
+.ipynb_checkpoints/
+
+
