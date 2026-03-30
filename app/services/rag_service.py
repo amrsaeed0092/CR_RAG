@@ -15,7 +15,7 @@ from config import GROQ_API_KEY, MODEL_NAME
 
 logger = logging.getLogger(__name__)
 
-# Load dataset
+# step 1. Load dataset and convert each remediation into one sentence
 df = pd.read_csv("data/remediations.csv")
 
 df["combined"] = df.apply(lambda r: f"""
@@ -27,26 +27,29 @@ Impacted Customers: {r['impacted_customers']}
 Resolution: {r['resolution']}
 """, axis=1)
 
-# Create docs
+# Step 2:  Create docs from the original remediations
 docs = DataFrameLoader(df, page_content_column="combined").load()
 
-# Chunking
+# Perform Sentence Chunking
 splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50, length_function=len)
 docs = splitter.split_documents(docs)
 
 # USe if open AI is leveraged
 # embeddings = OpenAIEmbeddings()  
-
+# Step 3: perform embedings
 embeddings = HuggingFaceEmbeddings(
     model_name="sentence-transformers/all-mpnet-base-v2"
 )
+# Step 4: Store embeddings into FAISS
 vectorstore = FAISS.from_documents(docs, embeddings)
 
+# Step 5: set the retriver
 retriever = vectorstore.as_retriever(search_kwargs={"k": 10})
 
-# Create Prompt
+# Write the LLM Prompt
 template="""
-You are a remediation analyst. Based ON THE CONTEXT PROVIDED, find the most relevant past remediation.
+You are a remediation analyst. Based ON THE CONTEXT PROVIDED, find the most relevant past remediation by analysing 
+the issue summary and resulution summary. And then summarize a small paragraph to be used as a documentatyion of this past remediation.
 Format that specific past case into the following CSV structure.
 If no relevant case exists, return 'No match found'.
 
@@ -58,25 +61,25 @@ Context:
 
 Return CSV only:
 
-SHRP_ID,Issue_Summary,Root_Cause,Timeline,Impacted_Customers_Count,Resolution_Summary
+SHRP_ID,Issue_Summary,Root_Cause,Timeline,Impacted_Customers_Count,Resolution_Summary, Past Remediation Summary
 """
 
 prompt = ChatPromptTemplate.from_template(template)
 
 
-# Create Groq LLM
+# Step 5: Create the LLM model (generator): Groq LLM
 llm = ChatGroq(
     groq_api_key=GROQ_API_KEY,
     model_name=MODEL_NAME,
-    temperature=0
+    temperature=0.0
 )
 
 
-# Create the Chain to format and clean the output
+# Step 6: Create the Chain to format and clean the output
 def format_docs(docs):
     return "\n\n".join(doc.page_content for doc in docs)
 
-
+# Step 7: run RAG
 def run_rag(issue: str):
     logger.info(f"Running RAG with Groq for: {issue}")
     
@@ -88,7 +91,7 @@ def run_rag(issue: str):
                     {"context": retriever | format_docs, "question": RunnablePassthrough()}
 
                     | prompt 
-                    | (lambda x: (print(f"PROMPT DEBUG:\n{x.to_string()}"), x)[1]) 
+                   # | (lambda x: (print(f"PROMPT DEBUG:\n{x.to_string()}"), x)[1]) 
                     | llm 
                     | StrOutputParser()
                 )
@@ -97,7 +100,7 @@ def run_rag(issue: str):
     # Pass as a dictionary to match the Runnable mapping above
     result = rag_chain.invoke(issue)
     
-    # Clean the output: Remove markdown code blocks if the LLM adds them
+    # Clean the output
     clean_csv = re.sub(r'^```csv\s*|```\s*$', '', result.strip(), flags=re.MULTILINE)
     
     # Use StringIO to load into DataFrame
